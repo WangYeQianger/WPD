@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>饮用水包装设计展示</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        #app {
+            width: 75%;
+            height: 75%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-container,
+        .form-container {
+            height: 100%;
+        }
+
+        .image-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9f9f9;
+            border-right: 2px solid #ccc;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+        }
+
+        .form-container {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+        }
+
+        .form-container input,
+        .form-container textarea {
+            width: 85%;
+            margin-bottom: 15px;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .form-container button {
+            width: 40%;
+            padding: 15px;
+            font-size: 1.1rem;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .form-container h2 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .form-container .download-button {
+            margin-top: 10px;
+            background-color: #28a745;
+        }
+
+        .form-container .download-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="title">饮用水包装设计</div>
+        <div class="main-container">
+            <div class="image-container">
+                <img :src="imageSrc" alt="水瓶">
+            </div>
+            <div class="form-container">
+                <h2>自定义设计</h2>
+                <input v-model="topWords" placeholder="关键词（用逗号分隔）">
+                <input v-model="brand" placeholder="品牌">
+                <textarea v-model="detailedInfo" rows="6" placeholder="详细信息（每行一个）"></textarea>
+                <button @click="submitForm">提交</button>
+                <button class="download-button" @click="downloadImage">下载预览图</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                topWords: '',
+                brand: '',
+                detailedInfo: '',
+                imageSrc: 'http://39.104.91.194:9000/public/wrap330.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20240709%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240709T083106Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=f1d5e1e0ab3786ae133d010d0f7ae61485d05c1f31e876cdc318c282e82273d4'
+            },
+            methods: {
+                submitForm() {
+                    const topWordsArray = this.topWords.split(/[,，]/).map(word => word.trim());
+                    const detailedInfoArray = this.detailedInfo.split('\n');
+
+                    const requestData = {
+                        topWords: topWordsArray,
+                        brand: this.brand,
+                        detailedInfo: detailedInfoArray
+                    };
+
+                    console.log(requestData)
+
+                    fetch('your_backend_url', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        if (data.code === 200) {
+                            this.imageSrc = data.data;
+                        } else {
+                            alert(data.errorMessage);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                },
+                downloadImage() {
+                    fetch(this.imageSrc)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = '设计图片.jpg';
+                        link.click();
+                        window.URL.revokeObjectURL(url);
+                    })
+                    .catch(error => {
+                        console.error('Error downloading the image:', error);
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
