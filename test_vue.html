@@ -105,6 +105,16 @@
             color: #333;
         }
 
+        .form-container .upload-button {
+            margin-bottom: 20px;
+            width: 40%;
+            background-color: #ffc107;
+        }
+
+        .form-container .upload-button:hover {
+            background-color: #e0a800;
+        }
+
         .form-container .download-button {
             margin-top: 10px;
             background-color: #28a745;
@@ -112,6 +122,10 @@
 
         .form-container .download-button:hover {
             background-color: #218838;
+        }
+
+        .form-container .hidden-input {
+            display: none;
         }
     </style>
 </head>
@@ -128,6 +142,8 @@
                 <input v-model="topWords" placeholder="关键词（用逗号分隔）">
                 <input v-model="brand" placeholder="品牌">
                 <textarea v-model="detailedInfo" rows="6" placeholder="详细信息（每行一个）"></textarea>
+                <button class="upload-button" @click="triggerFileUpload">上传Logo</button>
+                <input type="file" ref="fileInput" class="hidden-input" @change="uploadLogo">
                 <button @click="submitForm">提交</button>
                 <button class="download-button" @click="downloadImage">下载预览图</button>
             </div>
@@ -142,7 +158,8 @@
                 topWords: '',
                 brand: '',
                 detailedInfo: '',
-                imageSrc: 'http://39.104.91.194:9000/public/wrap330.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20240709%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240709T083106Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=f1d5e1e0ab3786ae133d010d0f7ae61485d05c1f31e876cdc318c282e82273d4'
+                imageSrc: 'http://39.104.91.194:9000/public/wrap330.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20240716%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240716T122352Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=a342255770a9990faa246a453e4b5d24920ced8c9cc3d0119e218cfc6a231ffc',
+                logoUrl: ''
             },
             methods: {
                 submitForm() {
@@ -152,12 +169,13 @@
                     const requestData = {
                         topWords: topWordsArray,
                         brand: this.brand,
-                        detailedInfo: detailedInfoArray
+                        detailedInfo: detailedInfoArray,
+                        logoUrl: this.logoUrl
                     };
 
                     console.log(requestData)
 
-                    fetch('your_backend_url', {
+                    fetch('http://39.104.91.194:9000/public/wrap330.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minio%2F20240709%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240709T083106Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=f1d5e1e0ab3786ae133d010d0f7ae61485d05c1f31e876cdc318c282e82273d4', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -190,6 +208,30 @@
                     })
                     .catch(error => {
                         console.error('Error downloading the image:', error);
+                    });
+                },
+                triggerFileUpload() {
+                    this.$refs.fileInput.click();
+                },
+                uploadLogo(event) {
+                    const file = event.target.files[0];
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            this.logoUrl = data.url;
+                        } else {
+                            alert('Logo上传失败: ' + data.errorMessage);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error uploading the logo:', error);
                     });
                 }
             }
